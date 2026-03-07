@@ -68,10 +68,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       favoriteNames.includes(p.name)
     );
 
-    // 除外店舗・お気に入り特別枠を除いて最大20件
-    const candidates = placesData.results
-      .filter((p) => !excludedNames.includes(p.name) && !favoriteNames.includes(p.name))
-      .slice(0, 20);
+    // 除外店舗・お気に入り特別枠を除いて取得
+    const filtered = placesData.results
+      .filter((p) => !excludedNames.includes(p.name) && !favoriteNames.includes(p.name));
+
+    // 候補が5件超の場合はランダムにシャッフルして最大12件をClaudeに渡す
+    const candidates = filtered.length > 5
+      ? filtered.sort(() => Math.random() - 0.5).slice(0, 12)
+      : filtered;
 
     if (!candidates.length) {
       return res.status(200).json({ shops: [] });
