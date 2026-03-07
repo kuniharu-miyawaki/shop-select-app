@@ -77,12 +77,12 @@ function App() {
   // 店舗カードタップ → 除外・来店予定保存 → Google Maps
   const handleShopSelect = async (shop: Shop) => {
     try {
+      window.open(shop.mapsUrl, '_blank', 'noopener,noreferrer');
+      setPhase('departure');
       await Promise.all([
         storage.addExcludedShop(shop.name),
         storage.addPendingVisit(shop),
       ]);
-      window.open(shop.mapsUrl, '_blank', 'noopener,noreferrer');
-      setPhase('departure');
       await loadData();
     } catch (err) {
       console.error('店舗選択エラー:', err);
