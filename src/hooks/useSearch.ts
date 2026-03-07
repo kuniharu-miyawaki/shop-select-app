@@ -9,6 +9,16 @@ interface UseSearchReturn {
   search: (answers: SurveyAnswers, location: Location, excludedNames: string[]) => Promise<void>;
 }
 
+function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 export function useSearch(): UseSearchReturn {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,8 +51,18 @@ export function useSearch(): UseSearchReturn {
         throw new Error(err.error ?? `APIエラー: ${res.status}`);
       }
 
-      const data = await res.json() as { shops: Shop[] };
-      const sorted = data.shops.sort((a, b) => b.rating - a.rating);
+      const data = await res.json() as { shops: Array<Shop & { placeLat?: number; placeLng?: number }> };
+
+      const shopsWithDistance = data.shops.map((shop) => {
+        const { placeLat, placeLng, ...rest } = shop;
+        const distanceM =
+          placeLat !== undefined && placeLng !== undefined
+            ? calcDistance(location.lat, location.lng, placeLat, placeLng)
+            : undefined;
+        return { ...rest, distanceM };
+      });
+
+      const sorted = shopsWithDistance.sort((a, b) => (a.distanceM ?? 9999) - (b.distanceM ?? 9999));
       setShops(sorted);
     } catch (err) {
       const message = err instanceof Error ? err.message : '不明なエラーが発生しました';

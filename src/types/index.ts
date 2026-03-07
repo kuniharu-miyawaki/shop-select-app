@@ -29,6 +29,7 @@ export interface Shop {
   rating: number;
   reason: string;
   mapsUrl: string;
+  distanceM?: number;
 }
 
 /** 除外店舗（Supabase: excluded_shops） */

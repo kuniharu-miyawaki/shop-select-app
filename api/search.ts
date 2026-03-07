@@ -15,6 +15,7 @@ interface PlaceResult {
   vicinity: string;
   rating?: number;
   place_id: string;
+  geometry: { location: { lat: number; lng: number } };
 }
 
 interface PlacesResponse {
@@ -117,7 +118,7 @@ ${candidateList}
 
     const shops = JSON.parse(jsonMatch[1] ?? jsonMatch[0]) as Array<{ name: string; [key: string]: unknown }>;
 
-    // place_idを使ったGoogle MapsのURLを付与
+    // place_idのURL・座標を付与
     const shopsWithUrls = shops.map((shop) => {
       const place = candidates.find((p) => p.name === shop.name);
       return {
@@ -125,6 +126,8 @@ ${candidateList}
         mapsUrl: place
           ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
           : `https://maps.google.com/maps?q=${encodeURIComponent(shop.name)}`,
+        placeLat: place?.geometry.location.lat,
+        placeLng: place?.geometry.location.lng,
       };
     });
 

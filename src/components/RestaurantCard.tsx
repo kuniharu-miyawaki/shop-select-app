@@ -26,9 +26,18 @@ export function RestaurantCard({ shop, onSelect, isFavorite = false }: Restauran
           <span className="text-base font-bold text-gray-800">{shop.name}</span>
           <span className="text-xs text-gray-500">{shop.cuisine}</span>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-yellow-400 text-sm">★</span>
-          <span className="text-sm font-semibold text-gray-700">{shop.rating.toFixed(1)}</span>
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
+          <div className="flex items-center gap-1">
+            <span className="text-yellow-400 text-sm">★</span>
+            <span className="text-sm font-semibold text-gray-700">{shop.rating.toFixed(1)}</span>
+          </div>
+          {shop.distanceM !== undefined && (
+            <span className="text-xs text-blue-500">
+              {shop.distanceM < 1000
+                ? `${shop.distanceM}m`
+                : `${(shop.distanceM / 1000).toFixed(1)}km`}
+            </span>
+          )}
         </div>
       </div>
       <p className="text-xs text-gray-500">{shop.address}</p>
