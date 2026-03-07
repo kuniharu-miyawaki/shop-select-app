@@ -8,4 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabaseの環境変数が設定されていません');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    flowType: 'implicit',
+  },
+});
