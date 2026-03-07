@@ -23,13 +23,9 @@ interface PlaceResult {
 
 // 予算回答 → 許容price_level
 const BUDGET_LEVELS: Record<string, number[]> = {
-  '〜500円':   [0, 1],
-  '〜1,000円': [0, 1],
-  '〜2,000円': [0, 1, 2, 3],
-  '〜3,000円': [0, 1, 2, 3],
-  '4,000円〜': [3, 4],
-  '2,000円〜': [2, 3, 4],
-  '3,000円〜': [3, 4],
+  'リーズナブル':   [0, 1],
+  '普通':           [0, 1, 2, 3],
+  '高くても良い':   [0, 1, 2, 3, 4],
 };
 
 interface PlacesResponse {
@@ -87,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 予算によるprice_levelフィルタ
-    const budgetAnswer = answers.find((a) => a.includes('円'));
+    const budgetAnswer = answers.find((a) => a in BUDGET_LEVELS);
     const allowedLevels = budgetAnswer ? BUDGET_LEVELS[budgetAnswer] : null;
     const priceFiltered = allowedLevels
       ? openResults.filter((p) => p.price_level === undefined || allowedLevels.includes(p.price_level))
