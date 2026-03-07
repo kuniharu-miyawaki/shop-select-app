@@ -192,9 +192,14 @@ function App() {
             {searchError && (
               <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{searchError}</p>
             )}
-            {allClosed && !searchError && (
-              <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-3 py-4 text-center">
-                現在この周辺に営業中のお店はありません。<br />時間を変えて再度お試しください。
+            {!searchError && allClosed && (
+              <p className="text-sm text-gray-500 bg-gray-100 rounded-xl px-4 py-5 text-center leading-relaxed">
+                残念ですが、営業中の店舗はありません。
+              </p>
+            )}
+            {!searchError && !allClosed && shops.length === 0 && favoriteSlot.length === 0 && (
+              <p className="text-sm text-gray-500 bg-gray-100 rounded-xl px-4 py-5 text-center leading-relaxed">
+                残念ですが、該当する店舗がありません。
               </p>
             )}
             {favoriteSlot.length > 0 && (
