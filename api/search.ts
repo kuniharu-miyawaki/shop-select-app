@@ -15,10 +15,22 @@ interface PlaceResult {
   name: string;
   vicinity: string;
   rating?: number;
+  price_level?: number;
   place_id: string;
   geometry: { location: { lat: number; lng: number } };
   opening_hours?: { open_now: boolean };
 }
+
+// 予算回答 → 許容price_level
+const BUDGET_LEVELS: Record<string, number[]> = {
+  '〜500円':   [0, 1],
+  '〜1,000円': [0, 1],
+  '〜2,000円': [0, 1, 2, 3],
+  '〜3,000円': [0, 1, 2, 3],
+  '4,000円〜': [3, 4],
+  '2,000円〜': [2, 3, 4],
+  '3,000円〜': [3, 4],
+};
 
 interface PlacesResponse {
   results: PlaceResult[];
@@ -74,13 +86,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ shops: [], allClosed: true });
     }
 
+    // 予算によるprice_levelフィルタ
+    const budgetAnswer = answers.find((a) => a.includes('円'));
+    const allowedLevels = budgetAnswer ? BUDGET_LEVELS[budgetAnswer] : null;
+    const priceFiltered = allowedLevels
+      ? openResults.filter((p) => p.price_level === undefined || allowedLevels.includes(p.price_level))
+      : openResults;
+
     // 5★お気に入り店舗が近くにあれば特別枠として抽出
-    const favoriteSlotPlaces = openResults.filter((p) =>
+    const favoriteSlotPlaces = priceFiltered.filter((p) =>
       favoriteNames.includes(p.name)
     );
 
     // 除外店舗・お気に入り特別枠を除いて取得
-    const filtered = openResults
+    const filtered = priceFiltered
       .filter((p) => !excludedNames.includes(p.name) && !favoriteNames.includes(p.name));
 
     // 候補が5件超の場合はランダムにシャッフルして最大12件をClaudeに渡す
