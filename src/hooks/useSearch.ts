@@ -82,18 +82,26 @@ export function useSearch(): UseSearchReturn {
 
       const data = await res.json() as { content: Array<{ type: string; text?: string }> };
 
-      // textブロックからJSONを抽出
-      const textBlock = data.content.find((c) => c.type === 'text');
-      if (!textBlock?.text) {
+      // 全textブロックを結合してJSONを抽出
+      const fullText = data.content
+        .filter((c) => c.type === 'text' && c.text)
+        .map((c) => c.text)
+        .join('\n');
+
+      if (!fullText) {
         throw new Error('レスポンスにテキストが含まれていません');
       }
 
-      const jsonMatch = textBlock.text.match(/\[[\s\S]*\]/);
+      // コードブロック内のJSON、または生のJSON配列を抽出
+      const jsonMatch =
+        fullText.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) ??
+        fullText.match(/(\[[\s\S]*\])/);
+
       if (!jsonMatch) {
         throw new Error('JSONの抽出に失敗しました');
       }
 
-      const parsed = JSON.parse(jsonMatch[0]) as Shop[];
+      const parsed = JSON.parse(jsonMatch[1] ?? jsonMatch[0]) as Shop[];
 
       // Googleレーティング降順ソート
       const sorted = parsed.sort((a, b) => b.rating - a.rating);
