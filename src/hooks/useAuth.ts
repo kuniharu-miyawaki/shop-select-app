@@ -18,17 +18,27 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 初期セッション取得
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // 認証状態変化をリアルタイム監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
+
+    // URLハッシュにアクセストークンがある場合（OAuth implicit flow）
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(() => {
+        window.history.replaceState(null, '', window.location.pathname);
+      });
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
+    }
 
     return () => subscription.unsubscribe();
   }, []);
