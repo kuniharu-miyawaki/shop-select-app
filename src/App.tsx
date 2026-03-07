@@ -1,6 +1,5 @@
 /** アプリケーションルートコンポーネント */
 import { useEffect, useState } from 'react';
-import { supabase } from './lib/supabase';
 import { useAuth } from './hooks/useAuth';
 import { useLocation } from './hooks/useLocation';
 import { useSearch } from './hooks/useSearch';
@@ -101,14 +100,6 @@ function App() {
     await loadData();
   };
 
-  // /auth/callback ルート処理
-  useEffect(() => {
-    if (window.location.pathname === '/auth/callback') {
-      supabase.auth.getSession().then(() => {
-        window.location.replace('/');
-      });
-    }
-  }, []);
 
   const renderContent = () => {
     switch (phase) {
