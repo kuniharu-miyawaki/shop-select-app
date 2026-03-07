@@ -21,6 +21,7 @@ function App() {
   const storage = useStorage();
 
   const [phase, setPhase] = useState<AppPhase>('intro');
+  const [lastSurvey, setLastSurvey] = useState<SurveyAnswers | null>(null);
   const [pendingVisits, setPendingVisits] = useState<PendingVisit[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [favoriteShops, setFavoriteShops] = useState<Shop[]>([]);
@@ -57,6 +58,7 @@ function App() {
 
   // アンケート完了 → 現在地取得 → 検索
   const handleSurveyComplete = async (answers: SurveyAnswers) => {
+    setLastSurvey(answers);
     setPhase('locating');
     const loc = await getLocation();
 
@@ -181,6 +183,11 @@ function App() {
                 戻る
               </button>
             </div>
+            {lastSurvey && (
+              <p className="text-xs text-gray-500 bg-gray-100 rounded-lg px-3 py-2">
+                {lastSurvey.answers.join(' · ')}
+              </p>
+            )}
             {searchError && (
               <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{searchError}</p>
             )}
