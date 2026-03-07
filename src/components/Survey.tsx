@@ -32,7 +32,6 @@ const QUESTIONS: Record<ShopCategory, { label: string; options: string[] }[]> = 
   ],
   souvenir: [
     { label: 'テイスト', options: ['和のもの', '洋のもの', 'こだわらない'] },
-    { label: '種類', options: ['食べ物・お菓子', '工芸品・雑貨', 'どちらでも'] },
     { label: '味の傾向', options: ['甘い系', 'しょっぱい系', 'どちらでも'] },
     { label: '予算', options: ['〜500円', '〜1,000円', '〜3,000円', '3,000円〜'] },
     { label: '行列の許容', options: ['並びたくない', '5分まで', '15分まで', '並んでもOK'] },
@@ -75,10 +74,7 @@ export function Survey({ onComplete, onCancel }: SurveyProps) {
   }
 
   const questions = QUESTIONS[category];
-  // お土産で種類が「工芸品・雑貨」の場合は「味の傾向」質問をスキップ
-  const filteredQuestions = category === 'souvenir' && answers[1] === '工芸品・雑貨'
-    ? questions.filter((_, i) => i !== 2)
-    : questions;
+  const filteredQuestions = questions;
 
   const currentQuestion = filteredQuestions[step];
   const total = filteredQuestions.length;
