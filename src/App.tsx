@@ -17,7 +17,7 @@ import type { AppPhase, SurveyAnswers, Shop, PendingVisit, Review } from './type
 function App() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const { getLocation } = useLocation();
-  const { shops, loading: searchLoading, error: searchError, search } = useSearch();
+  const { shops, favoriteSlot, loading: searchLoading, error: searchError, search } = useSearch();
   const storage = useStorage();
 
   const [phase, setPhase] = useState<AppPhase>('intro');
@@ -66,7 +66,8 @@ function App() {
     try {
       const excluded = await storage.getExcludedShops();
       const excludedNames = excluded.map((e) => e.shop_name);
-      await search(answers, loc, excludedNames);
+      const fiveStarNames = reviews.filter((r) => r.rating === 5).map((r) => r.shop_name);
+      await search(answers, loc, excludedNames, fiveStarNames);
       setPhase('results');
     } catch (err) {
       console.error('検索エラー:', err);
@@ -190,6 +191,14 @@ function App() {
             )}
             {searchError && (
               <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{searchError}</p>
+            )}
+            {favoriteSlot.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold text-yellow-600">★ あなたの5点店舗が近くにあります</p>
+                {favoriteSlot.map((shop) => (
+                  <RestaurantCard key={shop.name} shop={shop} onSelect={handleShopSelect} isFavorite />
+                ))}
+              </div>
             )}
             {shops.map((shop) => (
               <RestaurantCard key={shop.name} shop={shop} onSelect={handleShopSelect} />

@@ -8,6 +8,7 @@ interface SearchRequest {
   category: 'food' | 'cafe' | 'souvenir';
   answers: string[];
   excludedNames: string[];
+  favoriteNames: string[];
 }
 
 interface PlaceResult {
@@ -34,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { lat, lng, category, answers, excludedNames } = req.body as SearchRequest;
+  const { lat, lng, category, answers, excludedNames, favoriteNames } = req.body as SearchRequest;
 
   const googleKey = process.env.GOOGLE_PLACES_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -62,9 +63,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ shops: [] });
     }
 
-    // 除外店舗を除いて最大20件
+    // 5★お気に入り店舗が近くにあれば特別枠として抽出
+    const favoriteSlotPlaces = placesData.results.filter((p) =>
+      favoriteNames.includes(p.name)
+    );
+
+    // 除外店舗・お気に入り特別枠を除いて最大20件
     const candidates = placesData.results
-      .filter((p) => !excludedNames.includes(p.name))
+      .filter((p) => !excludedNames.includes(p.name) && !favoriteNames.includes(p.name))
       .slice(0, 20);
 
     if (!candidates.length) {
@@ -133,7 +139,20 @@ ${candidateList}
       };
     });
 
-    return res.status(200).json({ shops: shopsWithUrls });
+    // 特別枠を整形
+    const favoriteSlot = favoriteSlotPlaces.map((p) => ({
+      name: p.name,
+      cuisine: '',
+      address: p.vicinity,
+      rating: p.rating ?? 0,
+      reason: '以前★5をつけたお気に入りのお店です',
+      mapsUrl: `https://www.google.com/maps/place/?q=place_id:${p.place_id}`,
+      distanceM: undefined as number | undefined,
+      placeLat: p.geometry.location.lat,
+      placeLng: p.geometry.location.lng,
+    }));
+
+    return res.status(200).json({ shops: shopsWithUrls, favoriteSlot });
   } catch (err) {
     console.error('エラー:', err);
     const message = err instanceof Error ? err.message : '不明なエラー';

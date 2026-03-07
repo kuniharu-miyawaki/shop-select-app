@@ -4,9 +4,10 @@ import type { Shop, SurveyAnswers, Location } from '../types';
 
 interface UseSearchReturn {
   shops: Shop[];
+  favoriteSlot: Shop[];
   loading: boolean;
   error: string | null;
-  search: (answers: SurveyAnswers, location: Location, excludedNames: string[]) => Promise<void>;
+  search: (answers: SurveyAnswers, location: Location, excludedNames: string[], favoriteNames: string[]) => Promise<void>;
 }
 
 function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -21,17 +22,20 @@ function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): n
 
 export function useSearch(): UseSearchReturn {
   const [shops, setShops] = useState<Shop[]>([]);
+  const [favoriteSlot, setFavoriteSlot] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const search = async (
     answers: SurveyAnswers,
     location: Location,
-    excludedNames: string[]
+    excludedNames: string[],
+    favoriteNames: string[]
   ): Promise<void> => {
     setLoading(true);
     setError(null);
     setShops([]);
+    setFavoriteSlot([]);
 
     try {
       const res = await fetch('/api/search', {
@@ -43,6 +47,7 @@ export function useSearch(): UseSearchReturn {
           category: answers.category,
           answers: answers.answers,
           excludedNames,
+          favoriteNames,
         }),
       });
 
@@ -51,7 +56,7 @@ export function useSearch(): UseSearchReturn {
         throw new Error(err.error ?? `APIエラー: ${res.status}`);
       }
 
-      const data = await res.json() as { shops: Array<Shop & { placeLat?: number; placeLng?: number }> };
+      const data = await res.json() as { shops: Array<Shop & { placeLat?: number; placeLng?: number }>; favoriteSlot: Array<Shop & { placeLat?: number; placeLng?: number }> };
 
       const shopsWithDistance = data.shops.map((shop) => {
         const { placeLat, placeLng, ...rest } = shop;
@@ -64,6 +69,16 @@ export function useSearch(): UseSearchReturn {
 
       const sorted = shopsWithDistance.sort((a, b) => b.rating - a.rating);
       setShops(sorted);
+
+      const favWithDistance = (data.favoriteSlot ?? []).map((shop) => {
+        const { placeLat, placeLng, ...rest } = shop;
+        const distanceM =
+          placeLat !== undefined && placeLng !== undefined
+            ? calcDistance(location.lat, location.lng, placeLat, placeLng)
+            : undefined;
+        return { ...rest, distanceM };
+      });
+      setFavoriteSlot(favWithDistance);
     } catch (err) {
       const message = err instanceof Error ? err.message : '不明なエラーが発生しました';
       setError(message);
@@ -72,5 +87,5 @@ export function useSearch(): UseSearchReturn {
     }
   };
 
-  return { shops, loading, error, search };
+  return { shops, favoriteSlot, loading, error, search };
 }
