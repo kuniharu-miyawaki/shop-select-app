@@ -23,8 +23,11 @@ export function useStorage() {
    * 店舗を7日間除外リストに追加
    */
   const addExcludedShop = async (shopName: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('未ログイン');
     const excludedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await supabase.from('excluded_shops').insert({
+      user_id: user.id,
       shop_name: shopName,
       excluded_until: excludedUntil,
     });
@@ -35,7 +38,10 @@ export function useStorage() {
    * 来店予定を追加
    */
   const addPendingVisit = async (shop: Shop): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('未ログイン');
     const { error } = await supabase.from('pending_visits').insert({
+      user_id: user.id,
       shop_name: shop.name,
       cuisine: shop.cuisine,
       address: shop.address,
@@ -71,7 +77,10 @@ export function useStorage() {
     cuisine: string | null,
     rating: number
   ): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('未ログイン');
     const { error } = await supabase.from('reviews').insert({
+      user_id: user.id,
       shop_name: shopName,
       cuisine,
       rating,
