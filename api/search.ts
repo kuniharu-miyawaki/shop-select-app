@@ -66,22 +66,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     placesUrl.searchParams.set('key', googleKey);
     if (keyword) placesUrl.searchParams.set('keyword', keyword);
 
-    const placesRes = await fetch(placesUrl.toString());
-    const placesData = await placesRes.json() as PlacesResponse;
+    // まず営業中のみで検索
+    placesUrl.searchParams.set('opennow', 'true');
+    const openRes = await fetch(placesUrl.toString());
+    const openData = await openRes.json() as PlacesResponse;
 
-    if (!placesData.results?.length) {
+    // 営業中が0件の場合、opennowなしで再検索して候補の有無を確認
+    if (!openData.results?.length) {
+      placesUrl.searchParams.delete('opennow');
+      const allRes = await fetch(placesUrl.toString());
+      const allData = await allRes.json() as PlacesResponse;
+      if (allData.results?.length) {
+        return res.status(200).json({ shops: [], allClosed: true });
+      }
       return res.status(200).json({ shops: [], allClosed: false });
     }
 
-    // 営業中のみに絞る（営業時間情報がない店舗は含める）
-    const openResults = placesData.results.filter(
-      (p) => p.opening_hours === undefined || p.opening_hours.open_now
-    );
-
-    // 候補はあるが全て閉まっている場合
-    if (!openResults.length) {
-      return res.status(200).json({ shops: [], allClosed: true });
-    }
+    const openResults = openData.results;
 
     // 予算によるprice_levelフィルタ
     const budgetAnswer = answers.find((a) => a in BUDGET_LEVELS);
