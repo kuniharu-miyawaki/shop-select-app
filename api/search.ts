@@ -131,9 +131,30 @@ ${candidateList}
 
     const shops = JSON.parse(jsonMatch[1] ?? jsonMatch[0]) as Array<{ name: string; [key: string]: unknown }>;
 
-    // place_idのURL・座標を付与
-    const shopsWithUrls = shops.map((shop) => {
+    // Place Details で今日の営業時間を取得
+    const todayIndex = new Date().getDay(); // 0=日, 1=月...6=土
+    const weekdayIndex = todayIndex === 0 ? 6 : todayIndex - 1; // weekday_textは月曜=0
+
+    const fetchHours = async (placeId: string): Promise<string | undefined> => {
+      try {
+        const detailUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+        detailUrl.searchParams.set('place_id', placeId);
+        detailUrl.searchParams.set('fields', 'opening_hours');
+        detailUrl.searchParams.set('language', 'ja');
+        detailUrl.searchParams.set('key', googleKey);
+        const r = await fetch(detailUrl.toString());
+        const d = await r.json() as { result?: { opening_hours?: { weekday_text?: string[] } } };
+        const text = d.result?.opening_hours?.weekday_text?.[weekdayIndex];
+        return text ? text.replace(/^[^:]+:\s*/, '') : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+
+    // place_idのURL・座標・営業時間を付与
+    const shopsWithUrls = await Promise.all(shops.map(async (shop) => {
       const place = candidates.find((p) => p.name === shop.name);
+      const hours = place ? await fetchHours(place.place_id) : undefined;
       return {
         ...shop,
         mapsUrl: place
@@ -141,8 +162,9 @@ ${candidateList}
           : `https://maps.google.com/maps?q=${encodeURIComponent(shop.name)}`,
         placeLat: place?.geometry.location.lat,
         placeLng: place?.geometry.location.lng,
+        hours,
       };
-    });
+    }));
 
     // 特別枠を整形
     const favoriteSlot = favoriteSlotPlaces.map((p) => ({

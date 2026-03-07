@@ -41,6 +41,9 @@ export function RestaurantCard({ shop, onSelect, isFavorite = false }: Restauran
         </div>
       </div>
       <p className="text-xs text-gray-500">{shop.address}</p>
+      {shop.hours && (
+        <p className="text-xs text-green-600">営業時間: {shop.hours}</p>
+      )}
       <p className="text-sm text-gray-600 leading-relaxed">{shop.reason}</p>
       <span className="text-xs text-blue-500 mt-1">タップしてGoogle Mapsで開く →</span>
     </button>

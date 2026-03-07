@@ -30,6 +30,7 @@ export interface Shop {
   reason: string;
   mapsUrl: string;
   distanceM?: number;
+  hours?: string;
 }
 
 /** 除外店舗（Supabase: excluded_shops） */
