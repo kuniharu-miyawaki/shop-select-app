@@ -35,8 +35,12 @@ export function useSearch(): UseSearchReturn {
       ? `\n除外店舗（表示しないこと）: ${excludedNames.join('、')}`
       : '';
 
+    const locationLabel = location.address
+      ? `${location.address}付近（緯度${location.lat}, 経度${location.lng}）`
+      : `緯度${location.lat}, 経度${location.lng}`;
+
     return `現在時刻: ${now}
-現在地: 緯度${location.lat}, 経度${location.lng}（徒歩10分圏内で探してください）
+現在地: ${locationLabel}（徒歩10分＝約800m圏内で探してください）
 カテゴリ: ${categoryLabel}
 希望条件: ${answers.answers.join(' / ')}${exclusion}
 
