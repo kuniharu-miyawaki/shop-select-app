@@ -93,11 +93,26 @@ export function Survey({ onComplete, onCancel }: SurveyProps) {
     }
   };
 
+  const handleBack = () => {
+    if (step === 0) {
+      setCategory(null);
+    } else {
+      setAnswers(answers.slice(0, -1));
+      setStep(step - 1);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto px-4 py-6 flex flex-col gap-6">
       {/* 進捗バー */}
       <div className="flex flex-col gap-1">
         <div className="flex justify-between text-xs text-gray-400">
+          <button
+            onClick={handleBack}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ← 戻る
+          </button>
           <span>質問 {step + 1} / {total}</span>
           <button
             onClick={onCancel}
