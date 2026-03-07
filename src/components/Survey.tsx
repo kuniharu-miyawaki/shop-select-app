@@ -19,7 +19,7 @@ const QUESTIONS: Record<ShopCategory, { label: string; options: string[] }[]> = 
   food: [
     { label: '食感の好み', options: ['コッテリ食べたい', 'さっぱりしたい'] },
     { label: '温度の好み', options: ['温かいもの', '冷たいもの', 'どちらでも'] },
-    { label: '雰囲気', options: ['和の雰囲気', '洋の雰囲気', 'こだわらない'] },
+    { label: 'ジャンル', options: ['和食', '洋食', '中華・ラーメン', 'こだわらない'] },
     { label: '予算', options: ['〜1,000円', '〜2,000円', '〜3,000円', '4,000円〜'] },
     { label: '行列の許容', options: ['並びたくない', '5分まで', '15分まで', '並んでもOK'] },
   ],
