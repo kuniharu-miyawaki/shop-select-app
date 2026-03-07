@@ -168,7 +168,7 @@ ${candidateList}
       return {
         ...shop,
         mapsUrl: place
-          ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.name)}&query_place_id=${place.place_id}`
           : `https://maps.google.com/maps?q=${encodeURIComponent(shop.name)}`,
         placeLat: place?.geometry.location.lat,
         placeLng: place?.geometry.location.lng,
@@ -183,7 +183,7 @@ ${candidateList}
       address: p.vicinity,
       rating: p.rating ?? 0,
       reason: '以前★5をつけたお気に入りのお店です',
-      mapsUrl: `https://www.google.com/maps/place/?q=place_id:${p.place_id}`,
+      mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${p.place_id}`,
       distanceM: undefined as number | undefined,
       placeLat: p.geometry.location.lat,
       placeLng: p.geometry.location.lng,
