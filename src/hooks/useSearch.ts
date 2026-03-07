@@ -62,7 +62,7 @@ export function useSearch(): UseSearchReturn {
         return { ...rest, distanceM };
       });
 
-      const sorted = shopsWithDistance.sort((a, b) => (a.distanceM ?? 9999) - (b.distanceM ?? 9999));
+      const sorted = shopsWithDistance.sort((a, b) => b.rating - a.rating);
       setShops(sorted);
     } catch (err) {
       const message = err instanceof Error ? err.message : '不明なエラーが発生しました';
