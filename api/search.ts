@@ -15,6 +15,7 @@ interface PlaceResult {
   name: string;
   vicinity: string;
   rating?: number;
+  user_ratings_total?: number;
   price_level?: number;
   place_id: string;
   geometry: { location: { lat: number; lng: number } };
@@ -98,10 +99,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const filtered = priceFiltered
       .filter((p) => !excludedNames.includes(p.name) && !favoriteNames.includes(p.name));
 
-    // 候補が5件超の場合はランダムにシャッフルして最大12件をClaudeに渡す
-    const candidates = filtered.length > 5
-      ? filtered.sort(() => Math.random() - 0.5).slice(0, 12)
-      : filtered;
+    // 人気・穴場の選好に応じて並び替え、最大12件をClaudeに渡す
+    const popularityAnswer = answers.find((a) => ['人気店を選んで', '穴場・空いている店を選んで'].includes(a));
+    const candidates = (() => {
+      if (popularityAnswer === '人気店を選んで') {
+        return filtered.sort((a, b) => (b.user_ratings_total ?? 0) - (a.user_ratings_total ?? 0)).slice(0, 12);
+      } else if (popularityAnswer === '穴場・空いている店を選んで') {
+        return filtered.sort((a, b) => (a.user_ratings_total ?? 9999) - (b.user_ratings_total ?? 9999)).slice(0, 12);
+      } else {
+        // どちらでも: ランダムにシャッフル（ワクワク感）
+        return filtered.length > 5 ? filtered.sort(() => Math.random() - 0.5).slice(0, 12) : filtered;
+      }
+    })();
 
     if (!candidates.length) {
       return res.status(200).json({ shops: [] });
