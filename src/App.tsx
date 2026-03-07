@@ -17,7 +17,7 @@ import type { AppPhase, SurveyAnswers, Shop, PendingVisit, Review } from './type
 function App() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const { getLocation } = useLocation();
-  const { shops, favoriteSlot, loading: searchLoading, error: searchError, search } = useSearch();
+  const { shops, favoriteSlot, allClosed, loading: searchLoading, error: searchError, search } = useSearch();
   const storage = useStorage();
 
   const [phase, setPhase] = useState<AppPhase>('intro');
@@ -191,6 +191,11 @@ function App() {
             )}
             {searchError && (
               <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{searchError}</p>
+            )}
+            {allClosed && !searchError && (
+              <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-3 py-4 text-center">
+                現在この周辺に営業中のお店はありません。<br />時間を変えて再度お試しください。
+              </p>
             )}
             {favoriteSlot.length > 0 && (
               <div className="flex flex-col gap-2">

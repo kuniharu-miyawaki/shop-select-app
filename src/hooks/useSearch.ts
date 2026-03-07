@@ -5,6 +5,7 @@ import type { Shop, SurveyAnswers, Location } from '../types';
 interface UseSearchReturn {
   shops: Shop[];
   favoriteSlot: Shop[];
+  allClosed: boolean;
   loading: boolean;
   error: string | null;
   search: (answers: SurveyAnswers, location: Location, excludedNames: string[], favoriteNames: string[]) => Promise<void>;
@@ -23,6 +24,7 @@ function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): n
 export function useSearch(): UseSearchReturn {
   const [shops, setShops] = useState<Shop[]>([]);
   const [favoriteSlot, setFavoriteSlot] = useState<Shop[]>([]);
+  const [allClosed, setAllClosed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +38,7 @@ export function useSearch(): UseSearchReturn {
     setError(null);
     setShops([]);
     setFavoriteSlot([]);
+    setAllClosed(false);
 
     try {
       const res = await fetch('/api/search', {
@@ -56,7 +59,7 @@ export function useSearch(): UseSearchReturn {
         throw new Error(err.error ?? `APIエラー: ${res.status}`);
       }
 
-      const data = await res.json() as { shops: Array<Shop & { placeLat?: number; placeLng?: number }>; favoriteSlot: Array<Shop & { placeLat?: number; placeLng?: number }> };
+      const data = await res.json() as { shops: Array<Shop & { placeLat?: number; placeLng?: number }>; favoriteSlot: Array<Shop & { placeLat?: number; placeLng?: number }>; allClosed?: boolean };
 
       const shopsWithDistance = data.shops.map((shop) => {
         const { placeLat, placeLng, ...rest } = shop;
@@ -67,6 +70,7 @@ export function useSearch(): UseSearchReturn {
         return { ...rest, distanceM };
       });
 
+      setAllClosed(data.allClosed ?? false);
       const sorted = shopsWithDistance.sort((a, b) => b.rating - a.rating);
       setShops(sorted);
 
@@ -87,5 +91,5 @@ export function useSearch(): UseSearchReturn {
     }
   };
 
-  return { shops, favoriteSlot, loading, error, search };
+  return { shops, favoriteSlot, allClosed, loading, error, search };
 }

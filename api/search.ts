@@ -17,6 +17,7 @@ interface PlaceResult {
   rating?: number;
   place_id: string;
   geometry: { location: { lat: number; lng: number } };
+  opening_hours?: { open_now: boolean };
 }
 
 interface PlacesResponse {
@@ -53,7 +54,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     placesUrl.searchParams.set('radius', '800');
     placesUrl.searchParams.set('type', type);
     placesUrl.searchParams.set('language', 'ja');
-    placesUrl.searchParams.set('opennow', 'true');
     placesUrl.searchParams.set('key', googleKey);
     if (keyword) placesUrl.searchParams.set('keyword', keyword);
 
@@ -61,16 +61,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const placesData = await placesRes.json() as PlacesResponse;
 
     if (!placesData.results?.length) {
-      return res.status(200).json({ shops: [] });
+      return res.status(200).json({ shops: [], allClosed: false });
+    }
+
+    // 営業中のみに絞る（営業時間情報がない店舗は含める）
+    const openResults = placesData.results.filter(
+      (p) => p.opening_hours === undefined || p.opening_hours.open_now
+    );
+
+    // 候補はあるが全て閉まっている場合
+    if (!openResults.length) {
+      return res.status(200).json({ shops: [], allClosed: true });
     }
 
     // 5★お気に入り店舗が近くにあれば特別枠として抽出
-    const favoriteSlotPlaces = placesData.results.filter((p) =>
+    const favoriteSlotPlaces = openResults.filter((p) =>
       favoriteNames.includes(p.name)
     );
 
     // 除外店舗・お気に入り特別枠を除いて取得
-    const filtered = placesData.results
+    const filtered = openResults
       .filter((p) => !excludedNames.includes(p.name) && !favoriteNames.includes(p.name));
 
     // 候補が5件超の場合はランダムにシャッフルして最大12件をClaudeに渡す
