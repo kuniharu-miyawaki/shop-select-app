@@ -53,6 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     placesUrl.searchParams.set('radius', '800');
     placesUrl.searchParams.set('type', type);
     placesUrl.searchParams.set('language', 'ja');
+    placesUrl.searchParams.set('opennow', 'true');
     placesUrl.searchParams.set('key', googleKey);
     if (keyword) placesUrl.searchParams.set('keyword', keyword);
 
