@@ -9,7 +9,7 @@ import { Survey } from './components/Survey';
 import { RestaurantCard } from './components/RestaurantCard';
 import { ReviewPrompt } from './components/ReviewPrompt';
 import { VisitedList } from './components/VisitedList';
-import type { AppPhase, SurveyAnswers, Shop, PendingVisit, Review } from './types';
+import type { AppPhase, CorrectionType, SurveyAnswers, Shop, PendingVisit, Review } from './types';
 
 /**
  * アプリ全体のフェーズ制御とデータ管理
@@ -25,6 +25,8 @@ function App() {
   const [pendingVisits, setPendingVisits] = useState<PendingVisit[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [favoriteShops, setFavoriteShops] = useState<Shop[]>([]);
+  const [takeoutCorrectedNames, setTakeoutCorrectedNames] = useState<string[]>([]);
+  const [dismissedNames, setDismissedNames] = useState<string[]>([]);
 
   // ログイン後に来店予定・レビューを取得
   useEffect(() => {
@@ -34,10 +36,14 @@ function App() {
 
   const loadData = async () => {
     try {
-      const [visits, revs] = await Promise.all([
+      const [visits, revs, corrections] = await Promise.all([
         storage.getPendingVisits(),
         storage.getReviews(),
+        storage.getCorrections(),
       ]);
+      setTakeoutCorrectedNames(
+        corrections.filter((c) => c.correction === 'takeout_only').map((c) => c.shop_name)
+      );
       setPendingVisits(visits);
       setReviews(revs);
 
@@ -67,7 +73,8 @@ function App() {
       const excluded = await storage.getExcludedShops();
       const excludedNames = excluded.map((e) => e.shop_name);
       const fiveStarNames = reviews.filter((r) => r.rating === 5).map((r) => r.shop_name);
-      await search(answers, loc, excludedNames, fiveStarNames);
+      setDismissedNames([]);
+      await search(answers, loc, excludedNames, fiveStarNames, takeoutCorrectedNames);
       setPhase('results');
     } catch (err) {
       console.error('検索エラー:', err);
@@ -95,6 +102,20 @@ function App() {
     await storage.addReview(visit.shop_name, visit.cuisine, rating);
     await storage.deletePendingVisit(visit.id);
     await loadData();
+  };
+
+  // カード除外
+  const handleDismiss = async (shop: Shop, reason: CorrectionType) => {
+    setDismissedNames((prev) => [...prev, shop.name]);
+    try {
+      await storage.addExcludedShop(shop.name);
+      if (reason === 'takeout_only') {
+        await storage.addCorrection(shop.name, 'takeout_only');
+        setTakeoutCorrectedNames((prev) => [...prev, shop.name]);
+      }
+    } catch (err) {
+      console.error('除外エラー:', err);
+    }
   };
 
   // スキップ
@@ -202,17 +223,21 @@ function App() {
                 残念ですが、該当する店舗がありません。
               </p>
             )}
-            {favoriteSlot.length > 0 && (
+            {favoriteSlot.filter((s) => !dismissedNames.includes(s.name)).length > 0 && (
               <div className="flex flex-col gap-2">
                 <p className="text-xs font-semibold text-yellow-600">★ あなたの5点店舗が近くにあります</p>
-                {favoriteSlot.map((shop) => (
-                  <RestaurantCard key={shop.name} shop={shop} onSelect={handleShopSelect} isFavorite />
-                ))}
+                {favoriteSlot
+                  .filter((s) => !dismissedNames.includes(s.name))
+                  .map((shop) => (
+                    <RestaurantCard key={shop.name} shop={shop} onSelect={handleShopSelect} onDismiss={handleDismiss} isFavorite />
+                  ))}
               </div>
             )}
-            {shops.map((shop) => (
-              <RestaurantCard key={shop.name} shop={shop} onSelect={handleShopSelect} />
-            ))}
+            {shops
+              .filter((s) => !dismissedNames.includes(s.name))
+              .map((shop) => (
+                <RestaurantCard key={shop.name} shop={shop} onSelect={handleShopSelect} onDismiss={handleDismiss} />
+              ))}
           </div>
         );
 

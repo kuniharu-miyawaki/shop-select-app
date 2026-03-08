@@ -1,6 +1,6 @@
 /** Supabase CRUD フック */
 import { supabase } from '../lib/supabase';
-import type { ExcludedShop, PendingVisit, Review, Shop } from '../types';
+import type { CorrectionType, ExcludedShop, PendingVisit, Review, Shop, ShopCorrection } from '../types';
 
 /**
  * Supabaseデータ操作フック
@@ -100,6 +100,23 @@ export function useStorage() {
     return data ?? [];
   };
 
+  const addCorrection = async (shopName: string, correction: CorrectionType): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('未ログイン');
+    const { error } = await supabase.from('shop_corrections').insert({
+      user_id: user.id,
+      shop_name: shopName,
+      correction,
+    });
+    if (error) throw error;
+  };
+
+  const getCorrections = async (): Promise<ShopCorrection[]> => {
+    const { data, error } = await supabase.from('shop_corrections').select('*');
+    if (error) throw error;
+    return data ?? [];
+  };
+
   return {
     getExcludedShops,
     addExcludedShop,
@@ -108,5 +125,7 @@ export function useStorage() {
     deletePendingVisit,
     addReview,
     getReviews,
+    addCorrection,
+    getCorrections,
   };
 }

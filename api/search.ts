@@ -9,6 +9,7 @@ interface SearchRequest {
   answers: string[];
   excludedNames: string[];
   favoriteNames: string[];
+  takeoutCorrectedNames: string[];
 }
 
 interface PlaceResult {
@@ -47,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { lat, lng, category, answers, excludedNames, favoriteNames } = req.body as SearchRequest;
+  const { lat, lng, category, answers, excludedNames, favoriteNames, takeoutCorrectedNames } = req.body as SearchRequest;
 
   const googleKey = process.env.GOOGLE_PLACES_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -86,10 +87,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const openResults = openData.results;
 
-    // テーブル席希望の場合、テイクアウト専門店を除外
+    // テーブル席希望の場合、テイクアウト専門店・ユーザー修正済み店舗を除外
     const eatInOnly = answers.includes('テーブルで食べたい');
     const styleFiltered = eatInOnly
-      ? openResults.filter((p) => !p.types?.includes('meal_takeaway'))
+      ? openResults.filter((p) =>
+          !p.types?.includes('meal_takeaway') && !takeoutCorrectedNames.includes(p.name)
+        )
       : openResults;
 
     // 予算によるprice_levelフィルタ

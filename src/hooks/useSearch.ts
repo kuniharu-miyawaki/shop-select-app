@@ -8,7 +8,7 @@ interface UseSearchReturn {
   allClosed: boolean;
   loading: boolean;
   error: string | null;
-  search: (answers: SurveyAnswers, location: Location, excludedNames: string[], favoriteNames: string[]) => Promise<void>;
+  search: (answers: SurveyAnswers, location: Location, excludedNames: string[], favoriteNames: string[], takeoutCorrectedNames: string[]) => Promise<void>;
 }
 
 function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -32,7 +32,8 @@ export function useSearch(): UseSearchReturn {
     answers: SurveyAnswers,
     location: Location,
     excludedNames: string[],
-    favoriteNames: string[]
+    favoriteNames: string[],
+    takeoutCorrectedNames: string[]
   ): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -51,6 +52,7 @@ export function useSearch(): UseSearchReturn {
           answers: answers.answers,
           excludedNames,
           favoriteNames,
+          takeoutCorrectedNames,
         }),
       });
 

@@ -35,6 +35,18 @@ export interface Shop {
   priceLevel?: number;
 }
 
+/** 修正種別 */
+export type CorrectionType = 'skip_today' | 'takeout_only';
+
+/** 店舗修正（Supabase: shop_corrections） */
+export interface ShopCorrection {
+  id: string;
+  user_id: string;
+  shop_name: string;
+  correction: CorrectionType;
+  created_at: string;
+}
+
 /** 除外店舗（Supabase: excluded_shops） */
 export interface ExcludedShop {
   id: string;
