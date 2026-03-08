@@ -21,6 +21,7 @@ interface PlaceResult {
   geometry: { location: { lat: number; lng: number } };
   opening_hours?: { open_now: boolean };
   photos?: Array<{ photo_reference: string }>;
+  types?: string[];
 }
 
 // 予算回答 → 許容price_level
@@ -85,12 +86,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const openResults = openData.results;
 
+    // テーブル席希望の場合、テイクアウト専門店を除外
+    const eatInOnly = answers.includes('テーブルで食べたい');
+    const styleFiltered = eatInOnly
+      ? openResults.filter((p) => !p.types?.includes('meal_takeaway'))
+      : openResults;
+
     // 予算によるprice_levelフィルタ
     const budgetAnswer = answers.find((a) => a in BUDGET_LEVELS);
     const allowedLevels = budgetAnswer ? BUDGET_LEVELS[budgetAnswer] : null;
     const priceFiltered = allowedLevels
-      ? openResults.filter((p) => p.price_level === undefined || allowedLevels.includes(p.price_level))
-      : openResults;
+      ? styleFiltered.filter((p) => p.price_level === undefined || allowedLevels.includes(p.price_level))
+      : styleFiltered;
 
     // 5★お気に入り店舗が近くにあれば特別枠として抽出
     const favoriteSlotPlaces = priceFiltered.filter((p) =>

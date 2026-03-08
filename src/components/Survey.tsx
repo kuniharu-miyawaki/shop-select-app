@@ -17,6 +17,7 @@ const CATEGORIES: { value: ShopCategory; label: string; icon: string }[] = [
 /** カテゴリごとの質問定義 */
 const QUESTIONS: Record<ShopCategory, { label: string; options: string[] }[]> = {
   food: [
+    { label: '食事スタイル', options: ['テーブルで食べたい', 'テイクアウトでも良い'] },
     { label: '食感の好み', options: ['コッテリ食べたい', 'さっぱりしたい'] },
     { label: '温度の好み', options: ['温かいもの', '冷たいもの', 'どちらでも'] },
     { label: 'ジャンル', options: ['和食', '洋食', '中華・ラーメン', 'こだわらない'] },
