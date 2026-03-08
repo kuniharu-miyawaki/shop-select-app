@@ -20,6 +20,7 @@ interface PlaceResult {
   place_id: string;
   geometry: { location: { lat: number; lng: number } };
   opening_hours?: { open_now: boolean };
+  photos?: Array<{ photo_reference: string }>;
 }
 
 // 予算回答 → 許容price_level
@@ -186,10 +187,11 @@ ${candidateList}
       }
     };
 
-    // place_idのURL・座標・営業時間を付与
+    // place_idのURL・座標・営業時間・写真・価格帯を付与
     const shopsWithUrls = await Promise.all(shops.map(async (shop) => {
       const place = candidates.find((p) => p.name === shop.name);
       const hours = place ? await fetchHours(place.place_id) : undefined;
+      const photoRef = place?.photos?.[0]?.photo_reference;
       return {
         ...shop,
         mapsUrl: place
@@ -198,6 +200,8 @@ ${candidateList}
         placeLat: place?.geometry.location.lat,
         placeLng: place?.geometry.location.lng,
         hours,
+        photoUrl: photoRef ? `/api/photo?ref=${encodeURIComponent(photoRef)}` : undefined,
+        priceLevel: place?.price_level,
       };
     }));
 

@@ -11,11 +11,23 @@ interface RestaurantCardProps {
  * 推薦店舗の情報を表示するカード
  */
 export function RestaurantCard({ shop, onSelect, isFavorite = false }: RestaurantCardProps) {
+  const priceLabel = shop.priceLevel !== undefined
+    ? ['', '¥', '¥¥', '¥¥¥', '¥¥¥¥'][shop.priceLevel] ?? ''
+    : '';
+
   return (
     <button
       onClick={() => onSelect(shop)}
-      className="w-full max-w-md mx-auto bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-2 text-left hover:border-blue-400 hover:shadow-md transition-all shadow-sm"
+      className="w-full max-w-md mx-auto bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col text-left hover:border-blue-400 hover:shadow-md transition-all shadow-sm"
     >
+      {shop.photoUrl && (
+        <img
+          src={shop.photoUrl}
+          alt={shop.name}
+          className="w-full h-36 object-cover"
+        />
+      )}
+      <div className="p-4 flex flex-col gap-2">
       {isFavorite && (
         <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full w-fit">
           ⭐ お気に入り
@@ -31,6 +43,9 @@ export function RestaurantCard({ shop, onSelect, isFavorite = false }: Restauran
             <span className="text-yellow-400 text-sm">★</span>
             <span className="text-sm font-semibold text-gray-700">{shop.rating.toFixed(1)}</span>
           </div>
+          {priceLabel && (
+            <span className="text-xs text-gray-500">{priceLabel}</span>
+          )}
           {shop.distanceM !== undefined && (
             <span className="text-xs text-blue-500">
               {shop.distanceM < 1000
@@ -46,6 +61,7 @@ export function RestaurantCard({ shop, onSelect, isFavorite = false }: Restauran
       )}
       <p className="text-sm text-gray-600 leading-relaxed">{shop.reason}</p>
       <span className="text-xs text-blue-500 mt-1">タップしてGoogle Mapsで開く →</span>
+      </div>
     </button>
   );
 }

@@ -288,7 +288,7 @@ function App() {
 
         {/* メインコンテンツ */}
         <main className="pb-8">
-          {searchLoading ? null : renderContent()}
+          {renderContent()}
         </main>
       </div>
     </AuthGuard>

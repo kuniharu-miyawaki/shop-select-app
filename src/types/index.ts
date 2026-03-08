@@ -31,6 +31,8 @@ export interface Shop {
   mapsUrl: string;
   distanceM?: number;
   hours?: string;
+  photoUrl?: string;
+  priceLevel?: number;
 }
 
 /** 除外店舗（Supabase: excluded_shops） */
