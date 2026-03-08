@@ -17,7 +17,7 @@ import type { AppPhase, SurveyAnswers, Shop, PendingVisit, Review } from './type
 function App() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const { getLocation } = useLocation();
-  const { shops, favoriteSlot, allClosed, loading: searchLoading, error: searchError, search } = useSearch();
+  const { shops, favoriteSlot, allClosed, error: searchError, search } = useSearch();
   const storage = useStorage();
 
   const [phase, setPhase] = useState<AppPhase>('intro');
